@@ -1,7 +1,14 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 interface PokemonListItem {
   name: string;
@@ -24,34 +31,51 @@ function getPokemonSpriteUrl(id: string): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 }
 
+const INITIAL_URL = "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0";
+
 export default function Index() {
   const router = useRouter();
   const [pokemons, setPokemons] = useState<PokemonListItem[]>([]);
+  const [nextUrl, setNextUrl] = useState<string | null>(INITIAL_URL);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchPokemons() {
-      try {
-        const response = await fetch(
-          "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0"
-        );
+  async function loadPage(url: string, isInitial: boolean) {
+    try {
+      const response = await fetch(url);
 
-        if (!response.ok) {
-          throw new Error("No se pudo obtener la lista de Pokémon");
-        }
+      if (!response.ok) {
+        throw new Error("No se pudo obtener la lista de Pokémon");
+      }
 
-        const data: PokemonListResponse = await response.json();
-        setPokemons(data.results);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
-      } finally {
+      const data: PokemonListResponse = await response.json();
+      setPokemons((prev) =>
+        isInitial ? data.results : [...prev, ...data.results]
+      );
+      setNextUrl(data.next);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      if (isInitial) {
         setLoading(false);
+      } else {
+        setLoadingMore(false);
       }
     }
+  }
 
-    fetchPokemons();
+  useEffect(() => {
+    loadPage(INITIAL_URL, true);
   }, []);
+
+  function handleLoadMore() {
+    if (loadingMore || !nextUrl) {
+      return;
+    }
+    setLoadingMore(true);
+    loadPage(nextUrl, false);
+  }
 
   if (loading) {
     return (
@@ -92,6 +116,13 @@ export default function Index() {
           </Pressable>
         );
       }}
+      onEndReached={handleLoadMore}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        loadingMore ? (
+          <ActivityIndicator style={styles.footer} size="small" />
+        ) : null
+      }
     />
   );
 }
@@ -120,5 +151,8 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     textTransform: "capitalize",
+  },
+  footer: {
+    paddingVertical: 16,
   },
 });
