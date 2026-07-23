@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PokemonListItem {
   name: string;
@@ -24,6 +25,7 @@ function getPokemonSpriteUrl(id: string): string {
 }
 
 export default function Index() {
+  const router = useRouter();
   const [pokemons, setPokemons] = useState<PokemonListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,14 +77,19 @@ export default function Index() {
       renderItem={({ item }) => {
         const id = getPokemonId(item.url);
         return (
-          <View style={styles.card}>
+          <Pressable
+            style={styles.card}
+            onPress={() =>
+              router.push({ pathname: "/pokemon/[id]", params: { id } })
+            }
+          >
             <Image
               source={{ uri: getPokemonSpriteUrl(id) }}
               style={styles.sprite}
               contentFit="contain"
             />
             <Text style={styles.name}>{item.name}</Text>
-          </View>
+          </Pressable>
         );
       }}
     />
