@@ -1,14 +1,16 @@
+import { useFavorites } from "@/context/FavoritesContext";
 import { PokemonDetailResponse } from "@/types/pokemon";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 export default function PokemonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pokemon, setPokemon] = useState<PokemonDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     async function fetchPokemon() {
@@ -49,13 +51,29 @@ export default function PokemonDetail() {
     );
   }
 
+  const favorite = isFavorite(id);
+
   return (
     <View style={styles.container}>
-      <Image
-        source={{ uri: pokemon.sprites.front_default ?? undefined }}
-        style={styles.sprite}
-        contentFit="contain"
-      />
+      <View style={styles.headerRow}>
+        <Image
+          source={{ uri: pokemon.sprites.front_default ?? undefined }}
+          style={styles.sprite}
+          contentFit="contain"
+        />
+        <Pressable
+          onPress={() => toggleFavorite(id)}
+          hitSlop={8}
+          style={styles.favoriteButton}
+        >
+          <Ionicons
+            name={favorite ? "star" : "star-outline"}
+            size={22}
+            color={favorite ? "#f5c518" : "#999"}
+          />
+        </Pressable>
+      </View>
+
       <Text style={styles.name}>{pokemon.name}</Text>
 
       <View style={styles.typesRow}>
@@ -136,4 +154,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontWeight: "600",
   },
+  headerRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  favoriteButton: {
+    marginLeft: "auto",
+  },
 });
+
