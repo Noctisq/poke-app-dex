@@ -8,6 +8,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -33,6 +34,7 @@ function getPokemonSpriteUrl(id: string): string {
 }
 
 const INITIAL_URL = "https://pokeapi.co/api/v2/pokemon?limit=20&offset=0";
+const FULL_LIST_URL = "https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0";
 const SKELETON_COUNT = 8;
 
 function usePulse() {
@@ -58,6 +60,33 @@ function usePulse() {
   }, [opacity]);
 
   return opacity;
+};
+
+function useFilterPokemon(query: string): PokemonListItem[] {
+  const [fullPokemonList, setPokemonFullList] = useState<PokemonListItem[]>([]);
+  async function loadFullList(url: string) {
+    try {
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("No se pudo obtener la lista de Pokémon");
+      }
+      
+      const data: PokemonListResponse = await response.json();
+      setPokemonFullList(data.results);
+    } catch (err) {
+      console.error("Error al obtener el listado completo de Pokémon:", err);
+    }
+  }
+  
+  useEffect(() => {
+   loadFullList(FULL_LIST_URL);
+  }, []);
+
+  return fullPokemonList.filter((pokemon) =>
+      pokemon.name.toLowerCase().includes(query.toLowerCase())
+    );
 }
 
 function PokemonCardSkeleton() {
@@ -80,6 +109,8 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const filteredPokemons = useFilterPokemon(searchQuery);
 
   async function loadPage(url: string, isInitial: boolean) {
     try {
@@ -90,9 +121,11 @@ export default function Index() {
       }
 
       const data: PokemonListResponse = await response.json();
+      
       setPokemons((prev) =>
         isInitial ? data.results : [...prev, ...data.results]
       );
+
       setNextUrl(data.next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
@@ -105,10 +138,14 @@ export default function Index() {
     }
   }
 
+
+
   useEffect(() => {
     loadPage(INITIAL_URL, true);
   }, []);
 
+
+  
   function handleLoadMore() {
     if (loadingMore || !nextUrl) {
       return;
@@ -136,43 +173,51 @@ export default function Index() {
   }
 
   return (
-    <FlatList
-      style={styles.container}
-      data={pokemons}
-      keyExtractor={(pokemon) => getPokemonId(pokemon.url)}
-      renderItem={({ item }) => {
-        const id = getPokemonId(item.url);
-        return (
-          <Pressable
-            style={styles.card}
-            onPress={() =>
-              router.push({ pathname: "/pokemon/[id]", params: { id } })
-            }
-          >
-            <Image
-              source={{ uri: getPokemonSpriteUrl(id) }}
-              style={styles.sprite}
-              contentFit="contain"
-            />
-            <Text style={styles.name}>{item.name}</Text>
-          </Pressable>
-        );
-      }}
-      onEndReached={handleLoadMore}
-      onEndReachedThreshold={0.5}
-      ListFooterComponent={
-        loadingMore ? (
-          <ActivityIndicator style={styles.footer} size="small" />
-        ) : null
-      }
-    />
+    <View style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Buscar Pokémon..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+      <FlatList
+        style={styles.flatList}
+        data={searchQuery ? filteredPokemons : pokemons}
+        keyExtractor={(pokemon) => getPokemonId(pokemon.url)}
+        renderItem={({ item }) => {
+          const id = getPokemonId(item.url);
+          return (
+            <Pressable
+              style={styles.card}
+              onPress={() =>
+                router.push({ pathname: "/pokemon/[id]", params: { id } })
+              }
+            >
+              <Image
+                source={{ uri: getPokemonSpriteUrl(id) }}
+                style={styles.sprite}
+                contentFit="contain"
+              />
+              <Text style={styles.name}>{item.name}</Text>
+            </Pressable>
+          );
+        }}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? (
+            <ActivityIndicator style={styles.footer} size="small" />
+          ) : null
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     paddingTop: 60,
+    flex: 1,
   },
   center: {
     flex: 1,
@@ -185,6 +230,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     gap: 12,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
   },
   sprite: {
     width: 48,
@@ -204,5 +252,16 @@ const styles = StyleSheet.create({
   skeletonText: {
     width: 120,
     height: 16,
+  },
+  input: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    marginBottom: 12,
+  },
+  flatList: {
+    flex: 1,
   },
 });
