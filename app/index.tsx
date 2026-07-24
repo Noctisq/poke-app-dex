@@ -1,9 +1,11 @@
 import PokemonCardSkeleton from "@/components/PokemonCardSkeleton";
 import { SKELETON_COUNT } from "@/constants/genericNumbers";
 import { INITIAL_URL } from "@/constants/urls";
+import { useFavorites } from "@/context/FavoritesContext";
 import useFilterPokemon from "@/hooks/useFilterPokemon";
 import { PokemonListItem, PokemonListResponse } from "@/types/pokemon";
 import { getPokemonId, getPokemonSpriteUrl } from "@/utils/pokemonUtils";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -19,6 +21,7 @@ import {
 
 export default function Index() {
   const router = useRouter();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [pokemons, setPokemons] = useState<PokemonListItem[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(INITIAL_URL);
   const [loading, setLoading] = useState(true);
@@ -101,6 +104,7 @@ export default function Index() {
         keyExtractor={(pokemon) => getPokemonId(pokemon.url)}
         renderItem={({ item }) => {
           const id = getPokemonId(item.url);
+          const favorite = isFavorite(id);
           return (
             <Pressable
               style={styles.card}
@@ -114,6 +118,17 @@ export default function Index() {
                 contentFit="contain"
               />
               <Text style={styles.name}>{item.name}</Text>
+              <Pressable
+                onPress={() => toggleFavorite(id)}
+                hitSlop={8}
+                style={styles.favoriteButton}
+              >
+                <Ionicons
+                  name={favorite ? "star" : "star-outline"}
+                  size={22}
+                  color={favorite ? "#f5c518" : "#999"}
+                />
+              </Pressable>
             </Pressable>
           );
         }}
@@ -156,6 +171,10 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     textTransform: "capitalize",
+    flex: 1,
+  },
+  favoriteButton: {
+    marginLeft: "auto",
   },
   footer: {
     paddingVertical: 16,
