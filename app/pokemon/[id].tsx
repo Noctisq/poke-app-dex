@@ -1,32 +1,8 @@
+import { PokemonDetailResponse } from "@/types/pokemon";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-
-interface PokemonType {
-  type: {
-    name: string;
-  };
-}
-
-interface PokemonStat {
-  base_stat: number;
-  stat: {
-    name: string;
-  };
-}
-
-interface PokemonDetailResponse {
-  id: number;
-  name: string;
-  height: number;
-  weight: number;
-  types: PokemonType[];
-  stats: PokemonStat[];
-  sprites: {
-    front_default: string | null;
-  };
-}
 
 export default function PokemonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
