@@ -8,6 +8,8 @@ import {
 } from "@/domain/repositories/PokemonRepository";
 
 export class PokeApiPokemonRepository implements PokemonRepository {
+  private allSummariesCache: PokemonSummary[] | null = null;
+
   constructor(private readonly dataSource: PokeApiDataSource) {}
 
   async getList(cursor?: string | null): Promise<PokemonPage> {
@@ -19,8 +21,11 @@ export class PokeApiPokemonRepository implements PokemonRepository {
   }
 
   async getAllSummaries(): Promise<PokemonSummary[]> {
-    const data = await this.dataSource.fetchList(FULL_LIST_URL);
-    return data.results.map(toPokemonSummary);
+    if (!this.allSummariesCache) {
+      const data = await this.dataSource.fetchList(FULL_LIST_URL);
+      this.allSummariesCache = data.results.map(toPokemonSummary);
+    }
+    return this.allSummariesCache;
   }
 
   async getDetail(id: string): Promise<PokemonDetail> {

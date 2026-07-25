@@ -1,14 +1,12 @@
 import PokemonCardSkeleton from "@/components/PokemonCardSkeleton";
 import { SKELETON_COUNT } from "@/constants/genericNumbers";
-import { INITIAL_URL } from "@/constants/urls";
 import { useFavorites } from "@/context/FavoritesContext";
 import useFilterPokemon from "@/hooks/useFilterPokemon";
-import { PokemonListItem, PokemonListResponse } from "@/types/pokemon";
-import { getPokemonId, getPokemonSpriteUrl } from "@/utils/pokemonUtils";
+import usePokemonList from "@/hooks/usePokemonList";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -22,55 +20,9 @@ import {
 export default function Index() {
   const router = useRouter();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [pokemons, setPokemons] = useState<PokemonListItem[]>([]);
-  const [nextUrl, setNextUrl] = useState<string | null>(INITIAL_URL);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { pokemons, loading, loadingMore, error, loadMore } = usePokemonList();
   const [searchQuery, setSearchQuery] = useState("");
   const filteredPokemons = useFilterPokemon(searchQuery);
-
-  async function loadPage(url: string, isInitial: boolean) {
-    try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error("No se pudo obtener la lista de Pokémon");
-      }
-
-      const data: PokemonListResponse = await response.json();
-      
-      setPokemons((prev) =>
-        isInitial ? data.results : [...prev, ...data.results]
-      );
-
-      setNextUrl(data.next);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-    } finally {
-      if (isInitial) {
-        setLoading(false);
-      } else {
-        setLoadingMore(false);
-      }
-    }
-  }
-
-
-
-  useEffect(() => {
-    loadPage(INITIAL_URL, true);
-  }, []);
-
-
-  
-  function handleLoadMore() {
-    if (loadingMore || !nextUrl) {
-      return;
-    }
-    setLoadingMore(true);
-    loadPage(nextUrl, false);
-  }
 
   if (loading) {
     return (
@@ -101,25 +53,27 @@ export default function Index() {
       <FlatList
         style={styles.flatList}
         data={searchQuery ? filteredPokemons : pokemons}
-        keyExtractor={(pokemon) => getPokemonId(pokemon.url)}
+        keyExtractor={(pokemon) => pokemon.id}
         renderItem={({ item }) => {
-          const id = getPokemonId(item.url);
-          const favorite = isFavorite(id);
+          const favorite = isFavorite(item.id);
           return (
             <Pressable
               style={styles.card}
               onPress={() =>
-                router.push({ pathname: "/pokemon/[id]", params: { id } })
+                router.push({
+                  pathname: "/pokemon/[id]",
+                  params: { id: item.id },
+                })
               }
             >
               <Image
-                source={{ uri: getPokemonSpriteUrl(id) }}
+                source={{ uri: item.spriteUrl }}
                 style={styles.sprite}
                 contentFit="contain"
               />
               <Text style={styles.name}>{item.name}</Text>
               <Pressable
-                onPress={() => toggleFavorite(id)}
+                onPress={() => toggleFavorite(item.id)}
                 hitSlop={8}
                 style={styles.favoriteButton}
               >
@@ -132,7 +86,7 @@ export default function Index() {
             </Pressable>
           );
         }}
-        onEndReached={handleLoadMore}
+        onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           loadingMore ? (
