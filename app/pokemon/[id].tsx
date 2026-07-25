@@ -1,39 +1,14 @@
 import { useFavorites } from "@/context/FavoritesContext";
-import { PokemonDetailResponse } from "@/types/pokemon";
+import usePokemonDetail from "@/hooks/usePokemonDetail";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+
 export default function PokemonDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [pokemon, setPokemon] = useState<PokemonDetailResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { pokemon, loading, error } = usePokemonDetail(id);
   const { isFavorite, toggleFavorite } = useFavorites();
-
-  useEffect(() => {
-    async function fetchPokemon() {
-      try {
-        const response = await fetch(
-          `https://pokeapi.co/api/v2/pokemon/${id}`
-        );
-
-        if (!response.ok) {
-          throw new Error("No se pudo obtener la información del Pokémon");
-        }
-
-        const data: PokemonDetailResponse = await response.json();
-        setPokemon(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchPokemon();
-  }, [id]);
 
   if (loading) {
     return (
@@ -57,7 +32,7 @@ export default function PokemonDetail() {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Image
-          source={{ uri: pokemon.sprites.front_default ?? undefined }}
+          source={{ uri: pokemon.spriteUrl ?? undefined }}
           style={styles.sprite}
           contentFit="contain"
         />
@@ -77,23 +52,23 @@ export default function PokemonDetail() {
       <Text style={styles.name}>{pokemon.name}</Text>
 
       <View style={styles.typesRow}>
-        {pokemon.types.map(({ type }) => (
-          <Text key={type.name} style={styles.typeBadge}>
-            {type.name}
+        {pokemon.types.map((type) => (
+          <Text key={type} style={styles.typeBadge}>
+            {type}
           </Text>
         ))}
       </View>
 
       <View style={styles.measurementsRow}>
-        <Text>Altura: {(pokemon.height / 10).toFixed(1)} m</Text>
-        <Text>Peso: {(pokemon.weight / 10).toFixed(1)} kg</Text>
+        <Text>Altura: {pokemon.heightMeters.toFixed(1)} m</Text>
+        <Text>Peso: {pokemon.weightKilograms.toFixed(1)} kg</Text>
       </View>
 
       <View style={styles.statsSection}>
-        {pokemon.stats.map(({ stat, base_stat }) => (
+        {pokemon.stats.map((stat) => (
           <View key={stat.name} style={styles.statRow}>
             <Text style={styles.statName}>{stat.name}</Text>
-            <Text style={styles.statValue}>{base_stat}</Text>
+            <Text style={styles.statValue}>{stat.value}</Text>
           </View>
         ))}
       </View>
@@ -162,4 +137,3 @@ const styles = StyleSheet.create({
     marginLeft: "auto",
   },
 });
-
