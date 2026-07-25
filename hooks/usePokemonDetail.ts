@@ -13,7 +13,7 @@ export default function usePokemonDetail(id: string) {
         const detail = await container.getPokemonDetailUseCase.execute(id);
         setPokemon(detail);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }

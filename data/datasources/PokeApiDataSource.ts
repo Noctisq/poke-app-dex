@@ -7,7 +7,7 @@ export class PokeApiDataSource {
   async fetchList(url: string): Promise<PokemonListResponseDto> {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error("No se pudo obtener la lista de Pokémon");
+      throw new Error("Could not fetch the Pokémon list");
     }
     return response.json();
   }
@@ -15,7 +15,7 @@ export class PokeApiDataSource {
   async fetchDetail(id: string): Promise<PokemonDetailResponseDto> {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     if (!response.ok) {
-      throw new Error("No se pudo obtener la información del Pokémon");
+      throw new Error("Could not fetch the Pokémon details");
     }
     return response.json();
   }
