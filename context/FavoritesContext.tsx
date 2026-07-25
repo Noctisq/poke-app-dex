@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { container } from "@/di/container";
 import {
   createContext,
   ReactNode,
@@ -6,8 +6,6 @@ import {
   useEffect,
   useState,
 } from "react";
-
-const FAVORITES_STORAGE_KEY = "favorites";
 
 interface FavoritesContextValue {
   favorites: string[];
@@ -21,32 +19,17 @@ const FavoritesContext = createContext<FavoritesContextValue | undefined>(
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    async function loadFavorites() {
-      const stored = await AsyncStorage.getItem(FAVORITES_STORAGE_KEY);
-      if (stored) {
-        setFavorites(JSON.parse(stored));
-      }
-      setLoaded(true);
-    }
-    loadFavorites();
+    container.favoritesUseCase.getFavorites().then(setFavorites);
   }, []);
 
-  useEffect(() => {
-    if (!loaded) {
-      return;
-    }
-    AsyncStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
-  }, [favorites, loaded]);
-
-  function toggleFavorite(id: string) {
-    setFavorites((prev) =>
-      prev.includes(id)
-        ? prev.filter((favoriteId) => favoriteId !== id)
-        : [...prev, id]
+  async function toggleFavorite(id: string) {
+    const nextFavorites = await container.favoritesUseCase.toggleFavorite(
+      id,
+      favorites
     );
+    setFavorites(nextFavorites);
   }
 
   function isFavorite(id: string) {
