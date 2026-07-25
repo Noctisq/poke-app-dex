@@ -5,39 +5,54 @@ import { useEffect, useState } from "react";
 export default function usePokemonList() {
   const [pokemons, setPokemons] = useState<PokemonSummary[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [previousCursor, setPreviousCursor] = useState<string | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadPage(cursor: string | null, isInitial: boolean) {
+  async function loadPage(cursor: string | null) {
+    setLoading(true);
+    setError(null);
     try {
       const page = await container.getPokemonListUseCase.execute(cursor);
-      setPokemons((prev) =>
-        isInitial ? page.items : [...prev, ...page.items]
-      );
+      setPokemons(page.items);
       setNextCursor(page.nextCursor);
+      setPreviousCursor(page.previousCursor);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error desconocido");
     } finally {
-      if (isInitial) {
-        setLoading(false);
-      } else {
-        setLoadingMore(false);
-      }
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadPage(null, true);
+    loadPage(null);
   }, []);
 
-  function loadMore() {
-    if (loadingMore || !nextCursor) {
+  function goToNextPage() {
+    if (!nextCursor) {
       return;
     }
-    setLoadingMore(true);
-    loadPage(nextCursor, false);
+    setPageNumber((page) => page + 1);
+    loadPage(nextCursor);
   }
 
-  return { pokemons, loading, loadingMore, error, loadMore };
+  function goToPreviousPage() {
+    if (!previousCursor) {
+      return;
+    }
+    setPageNumber((page) => page - 1);
+    loadPage(previousCursor);
+  }
+
+  return {
+    pokemons,
+    loading,
+    error,
+    pageNumber,
+    hasNextPage: !!nextCursor,
+    hasPreviousPage: !!previousCursor,
+    goToNextPage,
+    goToPreviousPage,
+  };
 }

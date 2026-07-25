@@ -1,27 +1,30 @@
+import { BORDER_COLOR, CARD_BACKGROUND } from "@/constants/theme";
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    gap: 12,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
+    backgroundColor: CARD_BACKGROUND,
+    borderColor: BORDER_COLOR,
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   sprite: {
-    width: 48,
-    height: 48,
+    width: "70%",
+    aspectRatio: 1,
+    marginTop: 12,
   },
   skeletonBox: {
     backgroundColor: "#d0d0d0",
     borderRadius: 8,
   },
   skeletonText: {
-    width: 120,
-    height: 16,
+    width: "60%",
+    height: 14,
+    marginTop: 8,
+    marginBottom: 4,
   },
 });
 

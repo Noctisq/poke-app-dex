@@ -17,6 +17,7 @@ export class PokeApiPokemonRepository implements PokemonRepository {
     return {
       items: data.results.map(toPokemonSummary),
       nextCursor: data.next,
+      previousCursor: data.previous,
     };
   }
 
