@@ -1,10 +1,12 @@
 import PokemonCardSkeleton from "@/components/PokemonCardSkeleton";
 import { SKELETON_COUNT } from "@/constants/genericNumbers";
 import {
+  ACCENT,
   BORDER_COLOR,
-  CARD_BACKGROUND,
-  POKEDEX_RED,
   SCREEN_BACKGROUND,
+  SURFACE,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
 } from "@/constants/theme";
 import { useFavorites } from "@/context/FavoritesContext";
 import useFilterPokemon from "@/hooks/useFilterPokemon";
@@ -56,7 +58,7 @@ export default function Index() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text>{error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -65,8 +67,8 @@ export default function Index() {
     <View style={styles.container}>
       <TextInput
         style={styles.input}
-        placeholder="Buscar Pokémon..."
-        placeholderTextColor="#999"
+        placeholder="Search Pokémon..."
+        placeholderTextColor={TEXT_MUTED}
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -101,7 +103,7 @@ export default function Index() {
                 <Ionicons
                   name={favorite ? "star" : "star-outline"}
                   size={20}
-                  color={favorite ? "#f5c518" : "#999"}
+                  color={favorite ? "#f5c518" : TEXT_MUTED}
                 />
               </Pressable>
               <Image
@@ -127,9 +129,9 @@ export default function Index() {
             disabled={!hasPreviousPage}
           >
             <Ionicons name="chevron-back" size={18} color="#fff" />
-            <Text style={styles.pageButtonText}>Anterior</Text>
+            <Text style={styles.pageButtonText}>Previous</Text>
           </Pressable>
-          <Text style={styles.pageNumber}>Página {pageNumber}</Text>
+          <Text style={styles.pageNumber}>Page {pageNumber}</Text>
           <Pressable
             style={[
               styles.pageButton,
@@ -138,7 +140,7 @@ export default function Index() {
             onPress={goToNextPage}
             disabled={!hasNextPage}
           >
-            <Text style={styles.pageButtonText}>Siguiente</Text>
+            <Text style={styles.pageButtonText}>Next</Text>
             <Ionicons name="chevron-forward" size={18} color="#fff" />
           </Pressable>
         </View>
@@ -158,6 +160,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: SCREEN_BACKGROUND,
   },
+  errorText: {
+    color: TEXT_PRIMARY,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -168,10 +173,10 @@ const styles = StyleSheet.create({
   },
   card: {
     alignItems: "center",
-    backgroundColor: CARD_BACKGROUND,
+    backgroundColor: SURFACE,
     borderColor: BORDER_COLOR,
-    borderWidth: 2,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderRadius: 4,
     paddingVertical: 12,
     paddingHorizontal: 8,
   },
@@ -181,7 +186,7 @@ const styles = StyleSheet.create({
     left: 8,
     fontSize: 11,
     fontWeight: "600",
-    color: "#888",
+    color: TEXT_MUTED,
   },
   favoriteButton: {
     position: "absolute",
@@ -199,17 +204,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textTransform: "capitalize",
     marginTop: 4,
+    color: TEXT_PRIMARY,
   },
   input: {
     height: 44,
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 4,
-    borderColor: POKEDEX_RED,
-    borderWidth: 2,
-    borderRadius: 10,
+    borderColor: ACCENT,
+    borderWidth: 1,
+    borderRadius: 4,
     paddingHorizontal: 12,
-    backgroundColor: CARD_BACKGROUND,
+    backgroundColor: SURFACE,
+    color: TEXT_PRIMARY,
   },
   flatList: {
     flex: 1,
@@ -220,21 +227,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: CARD_BACKGROUND,
-    borderTopWidth: 2,
+    backgroundColor: SURFACE,
+    borderTopWidth: 1,
     borderTopColor: BORDER_COLOR,
   },
   pageButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: POKEDEX_RED,
-    borderRadius: 8,
+    backgroundColor: ACCENT,
+    borderRadius: 4,
     paddingVertical: 8,
     paddingHorizontal: 14,
   },
   pageButtonDisabled: {
-    backgroundColor: "#ccc",
+    backgroundColor: "#666",
   },
   pageButtonText: {
     color: "#fff",
@@ -243,6 +250,6 @@ const styles = StyleSheet.create({
   },
   pageNumber: {
     fontWeight: "600",
-    color: "#555",
+    color: TEXT_PRIMARY,
   },
 });

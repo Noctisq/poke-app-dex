@@ -1,13 +1,13 @@
-import { BORDER_COLOR, CARD_BACKGROUND } from "@/constants/theme";
+import { BORDER_COLOR, SURFACE } from "@/constants/theme";
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
   card: {
     alignItems: "center",
-    backgroundColor: CARD_BACKGROUND,
+    backgroundColor: SURFACE,
     borderColor: BORDER_COLOR,
-    borderWidth: 2,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderRadius: 4,
     paddingVertical: 12,
     paddingHorizontal: 8,
   },
@@ -17,8 +17,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   skeletonBox: {
-    backgroundColor: "#d0d0d0",
-    borderRadius: 8,
+    backgroundColor: "#5a5a5a",
+    borderRadius: 4,
   },
   skeletonText: {
     width: "60%",

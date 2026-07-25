@@ -1,5 +1,14 @@
-import { CARD_BACKGROUND, POKEDEX_RED, SCREEN_BACKGROUND } from "@/constants/theme";
 import { getPokemonTypeColor } from "@/constants/pokemonTypeColors";
+import {
+  ACCENT,
+  BORDER_COLOR,
+  SCREEN_BACKGROUND,
+  SURFACE,
+  SURFACE_ALT,
+  TEXT_MUTED,
+  TEXT_PRIMARY,
+  TEXT_SECONDARY,
+} from "@/constants/theme";
 import { useFavorites } from "@/context/FavoritesContext";
 import usePokemonDetail from "@/hooks/usePokemonDetail";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,7 +24,14 @@ import {
   View,
 } from "react-native";
 
-const STAT_BAR_MAX = 200;
+const STAT_LABELS: Record<string, string> = {
+  hp: "HP",
+  attack: "Attack",
+  defense: "Defense",
+  "special-attack": "Sp. Atk",
+  "special-defense": "Sp. Def",
+  speed: "Speed",
+};
 
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -37,7 +53,7 @@ export default function PokemonDetail() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={POKEDEX_RED} />
+        <ActivityIndicator size="large" color={ACCENT} />
       </View>
     );
   }
@@ -45,17 +61,19 @@ export default function PokemonDetail() {
   if (error || !pokemon) {
     return (
       <View style={styles.center}>
-        <Text>{error ?? "Pokémon no encontrado"}</Text>
+        <Text style={styles.errorText}>
+          {error ?? "Pokémon not found"}
+        </Text>
       </View>
     );
   }
 
   const favorite = isFavorite(id);
-  const primaryColor = getPokemonTypeColor(pokemon.types[0]);
+  const totalStats = pokemon.stats.reduce((sum, stat) => sum + stat.value, 0);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <View style={[styles.spriteCard, { backgroundColor: `${primaryColor}33` }]}>
+      <View style={styles.spriteCard}>
         <Pressable
           onPress={() => toggleFavorite(id)}
           hitSlop={8}
@@ -64,7 +82,7 @@ export default function PokemonDetail() {
           <Ionicons
             name={favorite ? "star" : "star-outline"}
             size={24}
-            color={favorite ? "#f5c518" : "#999"}
+            color={favorite ? "#f5c518" : TEXT_MUTED}
           />
         </Pressable>
         <Image
@@ -90,37 +108,42 @@ export default function PokemonDetail() {
 
       <View style={styles.measurementsRow}>
         <View style={styles.measurementBox}>
-          <Text style={styles.measurementLabel}>Altura</Text>
+          <Text style={styles.measurementLabel}>Height</Text>
           <Text style={styles.measurementValue}>
             {pokemon.heightMeters.toFixed(1)} m
           </Text>
         </View>
         <View style={styles.measurementBox}>
-          <Text style={styles.measurementLabel}>Peso</Text>
+          <Text style={styles.measurementLabel}>Weight</Text>
           <Text style={styles.measurementValue}>
             {pokemon.weightKilograms.toFixed(1)} kg
           </Text>
         </View>
       </View>
 
-      <View style={styles.statsSection}>
-        {pokemon.stats.map((stat) => (
-          <View key={stat.name} style={styles.statRow}>
-            <Text style={styles.statName}>{stat.name}</Text>
-            <View style={styles.statBarTrack}>
-              <View
-                style={[
-                  styles.statBarFill,
-                  {
-                    width: `${Math.min(100, (stat.value / STAT_BAR_MAX) * 100)}%`,
-                    backgroundColor: primaryColor,
-                  },
-                ]}
-              />
-            </View>
+      <View style={styles.statsTable}>
+        <View style={[styles.statRow, styles.statHeaderRow]}>
+          <Text style={styles.statHeaderText}>Stats</Text>
+          <Text style={styles.statHeaderText}>Base</Text>
+        </View>
+        {pokemon.stats.map((stat, index) => (
+          <View
+            key={stat.name}
+            style={[
+              styles.statRow,
+              { backgroundColor: index % 2 === 0 ? SURFACE : SURFACE_ALT },
+            ]}
+          >
+            <Text style={styles.statName}>
+              {STAT_LABELS[stat.name] ?? stat.name}
+            </Text>
             <Text style={styles.statValue}>{stat.value}</Text>
           </View>
         ))}
+        <View style={[styles.statRow, styles.totalRow]}>
+          <Text style={styles.statTotalLabel}>Total</Text>
+          <Text style={styles.statTotalValue}>{totalStats}</Text>
+        </View>
       </View>
     </ScrollView>
   );
@@ -143,9 +166,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: SCREEN_BACKGROUND,
   },
+  errorText: {
+    color: TEXT_PRIMARY,
+  },
   spriteCard: {
     width: "100%",
-    borderRadius: 16,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
@@ -163,13 +192,14 @@ const styles = StyleSheet.create({
   pokedexNumber: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#888",
+    color: TEXT_MUTED,
     marginTop: 8,
   },
   name: {
     fontSize: 24,
     fontWeight: "bold",
     textTransform: "capitalize",
+    color: TEXT_PRIMARY,
   },
   typesRow: {
     flexDirection: "row",
@@ -178,7 +208,7 @@ const styles = StyleSheet.create({
   typeBadge: {
     color: "#fff",
     fontWeight: "600",
-    borderRadius: 12,
+    borderRadius: 4,
     paddingHorizontal: 12,
     paddingVertical: 4,
     textTransform: "capitalize",
@@ -191,51 +221,67 @@ const styles = StyleSheet.create({
   },
   measurementBox: {
     alignItems: "center",
-    backgroundColor: CARD_BACKGROUND,
-    borderRadius: 10,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 4,
     paddingVertical: 8,
     paddingHorizontal: 20,
   },
   measurementLabel: {
     fontSize: 12,
-    color: "#888",
+    color: TEXT_MUTED,
   },
   measurementValue: {
     fontSize: 16,
     fontWeight: "600",
     marginTop: 2,
+    color: TEXT_PRIMARY,
   },
-  statsSection: {
+  statsTable: {
     width: "100%",
+    maxWidth: 260,
     marginTop: 16,
-    gap: 10,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 4,
+    overflow: "hidden",
   },
   statRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  statHeaderRow: {
+    backgroundColor: ACCENT,
+  },
+  statHeaderText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  totalRow: {
+    backgroundColor: ACCENT,
   },
   statName: {
-    width: 70,
-    textTransform: "capitalize",
-    color: "#555",
+    color: TEXT_SECONDARY,
     fontSize: 13,
   },
-  statBarTrack: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#e0e0e0",
-    overflow: "hidden",
-  },
-  statBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
   statValue: {
-    width: 32,
-    textAlign: "right",
+    color: TEXT_PRIMARY,
     fontWeight: "600",
+    fontSize: 13,
+  },
+  statTotalLabel: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  statTotalValue: {
+    color: "#fff",
+    fontWeight: "700",
     fontSize: 13,
   },
 });

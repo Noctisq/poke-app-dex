@@ -1,4 +1,4 @@
-import { POKEDEX_RED } from "@/constants/theme";
+import { ACCENT } from "@/constants/theme";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { Stack } from "expo-router";
 
@@ -7,7 +7,7 @@ export default function RootLayout() {
     <FavoritesProvider>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: POKEDEX_RED },
+          headerStyle: { backgroundColor: ACCENT },
           headerTintColor: "#fff",
           headerTitleStyle: { fontWeight: "bold" },
         }}
