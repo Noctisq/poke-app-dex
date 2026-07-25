@@ -1,50 +1,92 @@
-# Welcome to your Expo app 👋
+# Poké-App-Dex
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Pokédex construida con React Native + TypeScript, consumiendo [PokeAPI](https://pokeapi.co/). 
 
-## Get started
+## Instalación y ejecución
 
-1. Install dependencies
+### Requisitos previos
 
-   ```bash
-   npm install
-   ```
+- Node.js 18+ y npm.
+- Un dispositivo/emulador Android, simulador iOS, o [Expo Go](https://expo.dev/go) en un celular físico.
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Pasos
 
 ```bash
-npm run reset-project
+# 1. Instalar dependencias
+npm install
+
+# 2. Levantar el servidor de desarrollo
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Desde la terminal que abre `expo start` puedes:
 
-## Learn more
+- Presionar `a` para abrirlo en un emulador Android, o `i` para iOS (requiere Android Studio / Xcode instalado).
+- Escanear el código QR con la app **Expo Go** en un celular físico.
+- Presionar `w` para correrlo en el navegador.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Correr los tests
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm test
+```
+Corre la suite de Jest (`jest-expo`)
+### Decisiones técnicas principales
 
-## Join the community
 
-Join our community of developers creating universal apps.
+## Librerías principales
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Librería | Uso |
+|---|---|
+| `expo-router` | Enrutamiento por archivos|
+| `expo-image` | Carga y cacheo de los sprites de cada Pokémon. |
+| `@react-native-async-storage/async-storage` | Persistencia local de favoritos entre sesiones|
+| `@expo/vector-icons` | Íconos (estrella de favorito, flechas de paginado) |
+| `jest` + `jest-expo` | Test runner configurado con el preset oficial de Expo. |
+
+
+## Decisiones técnicas
+- Estructura de carpetas siguiendo lineamientos de Clean Architecture
+```
+app/                      
+components/
+constants/                 
+context/
+data/
+  dto/                   
+  mappers/
+  datasources/
+  repositories/
+di/container.ts
+domain/
+  entities/
+  repositories/           
+  usecases/
+hooks/
+```
+- Scroll infinito cuando se busca un pokémon y paginación con el listado inicial, quería que se vieran las dos maneras dentro de la app.
+- Mostrar los stats en tablas por la facilidad que ello conlleva
+- La UI es mostrada basándome en [Serebii](https://www.serebii.net/pokedex-swsh/bulbasaur/)
+- Singleton para manejar el inyección de dependencias
+## Evidencia de funcionamiento
+
+| Búsqueda filtrando resultados | Favoritos + paginado |
+|---|---|
+| ![Búsqueda de Pokémon](gifs/test5.gif) | ![Favoritos marcados y paginado](gifs/test2.gif) |
+
+| Scroll del listado | Paginado |
+|---|---|
+| ![Scroll del listado](gifs/test3.gif) | ![Paginado del listado](gifs/test4.gif) |
+
+![Lista inicial con buscador](gifs/test1.gif)
+
+## Pendientes, trade-offs y mejoras futuras
+
+- **Manejo de errores**: Actualmente el manejo de errores no es el más adecuado es muy general y nada especifico, también cuando se escribe y no hay resultados no muestra ningún mensaje. No hay manera de recargar si algún fetch falla.
+- **Barras de stats**: Por el momento se muestran los stats en tablas, una mejora futura mostrarlas como barras.
+- **Sin tests de UI/componentes**: La cantidad de tests no es robusta, y solo hay ciertos test unitarios
+- **DI**: `di/container.ts` basicamente es un singleton, no da más opciones de lyfecicles para cada dependencia.
+- **No implementado**: favoritos con sección/pantalla propia para verlos todos juntos.
+- **Responsividad**: No hay mucha manera de probar en muchos dispositivos sin las herramientas adecuadas.
+- **Bugs**: Al momento de pasar de página los skeleton toman toda la pantalla y el input desaparece. No hubo mucho test intensivo más que en las feature principales
+
